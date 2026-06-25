@@ -270,29 +270,43 @@ impl Terminal {
                 "__CLEAR_SCREEN__".to_string()
             }
             "ls" => {
-                if self.cwd == "/" {
-                    return "<span class='c-dir'>projects</span>  <span class='c-dir'>experience</span>  <span class='c-dir'>research</span>".to_string();
+                let mut target_dir = self.cwd.clone();
+                if !args.is_empty() {
+                    let target = args[0];
+                    if target_dir == "/" {
+                        target_dir = format!("/{}", target);
+                    } else {
+                        target_dir = format!("{}/{}", target_dir, target);
+                    }
                 }
 
-                let search_dir = format!("{}/", self.cwd);
+                let search_dir = if target_dir == "/" { "/".to_string() } else { format!("{}/", target_dir) };
                 let mut entries = std::collections::HashSet::new();
 
                 for (path, _) in &self.vfs {
                     if path.starts_with(&search_dir) {
                         let remainder = path.replace(&search_dir, "");
+                        if remainder.is_empty() { continue; } // Skip if it matches the dir exactly
                         
                         if let Some(slash_idx) = remainder.find('/') {
-                            // Tag as a directory
+                            // It's a nested directory
                             entries.insert(format!("<span class='c-dir'>{}</span>", &remainder[..slash_idx]));
                         } else {
-                            // Tag as a file
+                            // It's a file
                             entries.insert(format!("<span class='c-file'>{}</span>", remainder));
                         }
                     }
                 }
 
                 if entries.is_empty() { 
-                    " ".to_string() 
+                    if !args.is_empty() && self.vfs.contains_key(&target_dir) {
+                        // They tried to `ls` a specific file
+                        format!("<span class='c-file'>{}</span>", args[0])
+                    } else if !args.is_empty() {
+                        format!("<span class='c-err'>ls: cannot access '{}': No such file or directory</span>", args[0])
+                    } else {
+                        " ".to_string()
+                    }
                 } else { 
                     let mut output: Vec<String> = entries.into_iter().collect();
                     output.sort(); 

@@ -285,22 +285,20 @@ impl Terminal {
 
                 for (path, _) in &self.vfs {
                     if path.starts_with(&search_dir) {
-                        let remainder = path.replace(&search_dir, "");
-                        if remainder.is_empty() { continue; } // Skip if it matches the dir exactly
-                        
-                        if let Some(slash_idx) = remainder.find('/') {
-                            // It's a nested directory
-                            entries.insert(format!("<span class='c-dir'>{}</span>", &remainder[..slash_idx]));
-                        } else {
-                            // It's a file
-                            entries.insert(format!("<span class='c-file'>{}</span>", remainder));
+                        if let Some(remainder) = path.strip_prefix(&search_dir) {
+                            if remainder.is_empty() { continue; } 
+                            
+                            if let Some(slash_idx) = remainder.find('/') {
+                                entries.insert(format!("<span class='c-dir'>{}</span>", &remainder[..slash_idx]));
+                            } else {
+                                entries.insert(format!("<span class='c-file'>{}</span>", remainder));
+                            }
                         }
                     }
                 }
 
                 if entries.is_empty() { 
                     if !args.is_empty() && self.vfs.contains_key(&target_dir) {
-                        // They tried to `ls` a specific file
                         format!("<span class='c-file'>{}</span>", args[0])
                     } else if !args.is_empty() {
                         format!("<span class='c-err'>ls: cannot access '{}': No such file or directory</span>", args[0])

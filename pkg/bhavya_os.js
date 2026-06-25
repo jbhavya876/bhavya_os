@@ -11,6 +11,9 @@ export class Terminal {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_terminal_free(ptr, 0);
     }
+    clear_buffer() {
+        wasm.terminal_clear_buffer(this.__wbg_ptr);
+    }
     /**
      * @returns {string}
      */

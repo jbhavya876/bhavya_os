@@ -1,166 +1,307 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>BhavyaOS - Terminal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
     <style>
-        :root {
-            --term-green: #20C20E; 
-            --term-bg: #0A0A0A;
-            --term-glow: rgba(32, 194, 14, 0.4);
-            --term-blue: #3B8EEA; /* For directories */
-        }
-        
-        body {
-            background-color: var(--term-bg);
-            color: var(--term-green);
-            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', Courier, monospace;
-            font-size: 15px;
-            margin: 0;
-            padding: 30px;
-            overflow-x: hidden;
-            text-shadow: 0 0 3px var(--term-glow); /* Phosphor glow */
-        }
+      :root {
+        --term-green: #20c20e;
+        --term-bg: #050505;
+        --term-glow: rgba(32, 194, 14, 0.4);
+        --term-dir: #3b8eea;
+        --term-file: #e5e510;
+        --term-err: #ff5555;
+      }
 
-        #terminal {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            line-height: 1.6;
-        }
+      body {
+        background-color: var(--term-bg);
+        color: var(--term-green);
+        font-family: "JetBrains Mono", "Courier New", monospace;
+        font-size: 14px;
+        margin: 0;
+        padding: 20px 20px 60px 20px;
+        overflow-x: hidden;
+        text-shadow: 0 0 4px var(--term-glow);
+      }
 
-        .output-line {
-            margin-bottom: 4px;
-        }
+      #terminal {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        line-height: 1.5;
+      }
 
-        .cursor {
-            display: inline-block;
-            width: 8px;
-            height: 18px;
-            background-color: var(--term-green);
-            animation: blink 1s step-end infinite;
-            vertical-align: text-bottom;
-            box-shadow: 0 0 5px var(--term-green);
-        }
+      .c-dir {
+        color: var(--term-dir);
+        font-weight: bold;
+        text-shadow: 0 0 3px rgba(59, 142, 234, 0.5);
+      }
+      .c-file {
+        color: var(--term-file);
+      }
+      .c-err {
+        color: var(--term-err);
+      }
+      .prompt-user {
+        font-weight: bold;
+      }
 
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
+      .cursor {
+        display: inline-block;
+        width: 8px;
+        height: 16px;
+        background-color: var(--term-green);
+        animation: blink 1s step-end infinite;
+        vertical-align: text-bottom;
+        box-shadow: 0 0 5px var(--term-green);
+      }
 
-        .prompt-user {
-            color: var(--term-green);
-            font-weight: bold;
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
         }
+        50% {
+          opacity: 0;
+        }
+      }
 
-        body::after {
-            content: " ";
-            display: block;
-            position: fixed; 
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-            z-index: 2;
-            background-size: 100% 4px;
-            pointer-events: none;
-        }
+      .crt-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%),
+          radial-gradient(circle, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.4) 100%);
+        background-size:
+          100% 4px,
+          100% 100%;
+        pointer-events: none;
+        z-index: 50;
+        animation: crt-flicker 0.15s infinite;
+      }
 
-        body::before {
-            content: " ";
-            display: block;
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.6) 100%);
-            z-index: 3;
-            pointer-events: none;
+      @keyframes crt-flicker {
+        0% {
+          opacity: 0.98;
         }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.99;
+        }
+      }
+
+      #shortcut-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: #111;
+        color: #888;
+        padding: 8px 20px;
+        font-size: 12px;
+        display: flex;
+        justify-content: space-between;
+        z-index: 100;
+        border-top: 1px solid #333;
+      }
+
+      .key-hint {
+        color: #ccc;
+        font-weight: bold;
+      }
+
+      #mobile-trap {
+        position: absolute;
+        opacity: 0;
+        top: -9999px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <div class="crt-overlay"></div>
+
+    <input
+      type="text"
+      id="mobile-trap"
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="false"
+      autocapitalize="none"
+    />
 
     <div id="terminal">
-        <div class="output-line">[ OK ] Started Cryptographic Verification Engine.</div>
-        <div class="output-line">[ OK ] Initializing Virtual File System...</div>
-        <div class="output-line">[ OK ] Reached target System Initialization.</div>
-        <br>
-        <div class="output-line">BhavyaOS v2.0.26 (tty1)</div>
-        <br>
-        <div class="output-line">Welcome to the portfolio of Bhavya Jain.</div>
-        <div class="output-line">Systems & Cryptography Engineer.</div>
-        <br>
-        <div class="output-line">Type 'help' to see available commands.</div>
-        <br>
+      <div id="boot-sequence"></div>
+      <div id="interactive-layer" style="display: none">
         <div id="output"></div>
         <div id="input-line">
-            <span id="prompt" class="prompt-user">guest@bhavya-os:/$</span>
-            <span id="current-input"></span><span class="cursor"></span>
+          <span id="prompt" class="prompt-user">guest@bhavya-os:/$</span>
+          <span id="current-input"></span><span class="cursor"></span>
         </div>
+      </div>
+    </div>
+
+    <div id="shortcut-bar">
+      <span><span class="key-hint">Tab</span> Autocomplete</span>
+      <span><span class="key-hint">↑/↓</span> History</span>
+      <span><span class="key-hint">Ctrl+C</span> Cancel Line</span>
+      <span><span class="key-hint">Ctrl+L</span> Clear Display</span>
     </div>
 
     <script type="module">
-        import init, { Terminal } from './pkg/bhavya_os.js';
+      import init, { Terminal } from "./pkg/bhavya_os.js";
 
-        async function boot() {
-            await init();
-            const term = new Terminal();
-            
-            const outputDiv = document.getElementById('output');
-            const inputSpan = document.getElementById('current-input');
-            const promptSpan = document.getElementById('prompt');
+      const escapeHTML = (str) => {
+        return str.replace(
+          /[&<>'"]/g,
+          (tag) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              "'": "&#39;",
+              '"': "&quot;",
+            })[tag] || tag,
+        );
+      };
 
-            document.addEventListener('keydown', (e) => {
-                // Prevent browser defaults for functional keys
-                if (['Space', 'ArrowUp', 'ArrowDown', 'Tab'].includes(e.code) || e.key === 'Backspace') {
-                    e.preventDefault();
-                }
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-                if (e.ctrlKey || e.metaKey || e.altKey) return;
+      async function boot() {
+        await init();
+        const term = new Terminal();
 
-                let key = e.key;
-                let result = "";
+        const bootDiv = document.getElementById("boot-sequence");
+        const interactiveLayer = document.getElementById("interactive-layer");
+        const outputDiv = document.getElementById("output");
+        const inputSpan = document.getElementById("current-input");
+        const promptSpan = document.getElementById("prompt");
+        const mobileTrap = document.getElementById("mobile-trap");
 
-                if (key === 'ArrowUp') {
-                    result = term.handle_up();
-                } else if (key === 'ArrowDown') {
-                    result = term.handle_down();
-                } else if (key === 'Tab') {
-                    result = term.handle_tab();
-                } else {
-                    // Standard typing execution
-                    result = term.process_key(key);
-                }
+        const bootLogs = [
+          "[ OK ] Started Cryptographic Verification Engine.",
+          "[ OK ] Initializing Virtual File System...",
+          "[ OK ] Loading secp256k1 curves...",
+          "[ OK ] Reached target System Initialization.",
+          " ",
+          "BhavyaOS v2.0.26 (tty1)",
+          "Welcome to the portfolio of Bhavya Jain.",
+          "Systems & Cryptography Engineer.",
+          "Type 'help' to see available commands.",
+        ];
 
-                if (key === 'Enter') {
-                    const bufferText = term.get_buffer(); 
-                    
-                    if (result === "__CLEAR_SCREEN__") {
-                        outputDiv.innerHTML = "";
-                    } else if (result !== "") {
-                        const oldPrompt = promptSpan.innerText;
-                        const prevCmd = inputSpan.innerText;
-                        
-                        outputDiv.innerHTML += `<div class="output-line"><span class="prompt-user">${oldPrompt}</span> ${prevCmd}</div>`;
-                        outputDiv.innerHTML += `<div class="output-line">${result}</div>`;
-                    } else {
-                        const oldPrompt = promptSpan.innerText;
-                        const prevCmd = inputSpan.innerText;
-                        outputDiv.innerHTML += `<div class="output-line"><span class="prompt-user">${oldPrompt}</span> ${prevCmd}</div>`;
-                    }
-                    
-                    promptSpan.innerText = `guest@bhavya-os:${term.get_cwd()}$`;
-                    window.scrollTo(0, document.body.scrollHeight);
-                }
-
-                inputSpan.innerText = term.get_buffer();
-            });
+        for (const log of bootLogs) {
+          bootDiv.innerHTML += `<div>${log}</div>`;
+          window.scrollTo(0, document.body.scrollHeight);
+          await sleep(Math.random() * 150 + 50);
         }
 
-        boot();
+        bootDiv.innerHTML += `<br>`;
+        interactiveLayer.style.display = "block";
+
+        document.addEventListener("click", () => mobileTrap.focus());
+        mobileTrap.focus();
+
+        const handleKeydown = (e) => {
+          if (
+            ["Space", "ArrowUp", "ArrowDown", "Tab"].includes(e.code) ||
+            e.key === "Backspace"
+          ) {
+            e.preventDefault();
+          }
+
+          if (e.ctrlKey) {
+            if (e.key === "l" || e.key === "L") {
+              e.preventDefault();
+              outputDiv.innerHTML = "";
+              return;
+            }
+            if (e.key === "c" || e.key === "C") {
+              e.preventDefault();
+              const oldPrompt = promptSpan.innerText;
+              const prevCmd = escapeHTML(term.get_buffer());
+              outputDiv.innerHTML += `<div><span class="prompt-user">${oldPrompt}</span> ${prevCmd}^C</div>`;
+              term.clear_buffer();
+              inputSpan.innerText = "";
+              window.scrollTo(0, document.body.scrollHeight);
+              return;
+            }
+            if (e.key === "u" || e.key === "U") {
+              e.preventDefault();
+              term.clear_buffer();
+              inputSpan.innerText = "";
+              return;
+            }
+            return;
+          }
+
+          if (e.metaKey || e.altKey) return;
+
+          let key = e.key;
+
+          const bufferSnapshot = term.get_buffer();
+          let result = "";
+
+          if (key === "ArrowUp") result = term.handle_up();
+          else if (key === "ArrowDown") result = term.handle_down();
+          else if (key === "Tab") result = term.handle_tab();
+          else if (key === "Enter" || key === "Backspace") {
+            result = term.process_key(key);
+          } else if (key.length === 1) {
+            result = term.process_key(key);
+            e.preventDefault();
+          }
+
+          if (key === "Enter") {
+            const prevCmd = escapeHTML(bufferSnapshot);
+            const oldPrompt = promptSpan.innerText;
+
+            if (result === "__CLEAR_SCREEN__") {
+              outputDiv.innerHTML = "";
+            } else if (result !== "") {
+              outputDiv.innerHTML += `<div><span class="prompt-user">${oldPrompt}</span> ${prevCmd}</div>`;
+              outputDiv.innerHTML += `<div style="margin-bottom: 8px;">${result}</div>`;
+            } else {
+              outputDiv.innerHTML += `<div><span class="prompt-user">${oldPrompt}</span> ${prevCmd}</div>`;
+            }
+
+            promptSpan.innerText = `guest@bhavya-os:${term.get_cwd()}$`;
+
+            requestAnimationFrame(() => {
+              window.scrollTo(0, document.body.scrollHeight);
+            });
+            mobileTrap.value = "";
+          }
+
+          inputSpan.innerText = escapeHTML(term.get_buffer());
+        };
+
+        document.addEventListener("keydown", handleKeydown);
+        mobileTrap.addEventListener("input", (e) => {
+          const char = e.data;
+          if (char) {
+            term.process_key(char);
+            inputSpan.innerText = escapeHTML(term.get_buffer());
+          }
+        });
+      }
+
+      boot();
     </script>
-</body>
+  </body>
 </html>

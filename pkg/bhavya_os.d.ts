@@ -4,6 +4,7 @@
 export class Terminal {
     free(): void;
     [Symbol.dispose](): void;
+    clear_buffer(): void;
     get_buffer(): string;
     get_cwd(): string;
     handle_down(): string;
@@ -18,6 +19,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_terminal_free: (a: number, b: number) => void;
+    readonly terminal_clear_buffer: (a: number) => void;
     readonly terminal_get_buffer: (a: number) => [number, number];
     readonly terminal_get_cwd: (a: number) => [number, number];
     readonly terminal_handle_down: (a: number) => [number, number];

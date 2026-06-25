@@ -2,6 +2,7 @@
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
 export const __wbg_terminal_free: (a: number, b: number) => void;
+export const terminal_clear_buffer: (a: number) => void;
 export const terminal_get_buffer: (a: number) => [number, number];
 export const terminal_get_cwd: (a: number) => [number, number];
 export const terminal_handle_down: (a: number) => [number, number];

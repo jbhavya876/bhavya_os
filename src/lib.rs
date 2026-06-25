@@ -250,6 +250,10 @@ impl Terminal {
         self.buffer.clone()
     }
 
+    pub fn clear_buffer(&mut self) {
+        self.buffer.clear();
+    }
+
     fn execute_command(&mut self, cmd_line: &str) -> String {
         let parts: Vec<&str> = cmd_line.split_whitespace().collect();
         if parts.is_empty() { return String::new(); }
@@ -267,7 +271,7 @@ impl Terminal {
             }
             "ls" => {
                 if self.cwd == "/" {
-                    return "projects  experience  research".to_string();
+                    return "<span class='c-dir'>projects</span>  <span class='c-dir'>experience</span>  <span class='c-dir'>research</span>".to_string();
                 }
 
                 let search_dir = format!("{}/", self.cwd);
@@ -278,9 +282,11 @@ impl Terminal {
                         let remainder = path.replace(&search_dir, "");
                         
                         if let Some(slash_idx) = remainder.find('/') {
-                            entries.insert(remainder[..slash_idx].to_string());
+                            // Tag as a directory
+                            entries.insert(format!("<span class='c-dir'>{}</span>", &remainder[..slash_idx]));
                         } else {
-                            entries.insert(remainder);
+                            // Tag as a file
+                            entries.insert(format!("<span class='c-file'>{}</span>", remainder));
                         }
                     }
                 }
@@ -312,7 +318,7 @@ impl Terminal {
                 let new_path = if self.cwd == "/" { format!("/{}", target) } else { format!("{}/{}", self.cwd, target) };
                 
                 if self.vfs.contains_key(&new_path) {
-                    return format!("cd: {}: Not a directory", target);
+                    return format!("<span class='c-err'>cd: {}: Not a directory</span>", target);
                 }
                 
                 let dir_exists = self.vfs.keys().any(|k| k.starts_with(&format!("{}/", new_path)));
@@ -321,20 +327,20 @@ impl Terminal {
                     self.cwd = new_path;
                     String::new()
                 } else {
-                    format!("cd: {}: No such file or directory", target) 
+                    format!("<span class='c-err'>cd: {}: No such file or directory</span>", target) 
                 }
             }
             "cat" => {
-                if args.is_empty() { return "cat: missing file operand".to_string(); }
+                if args.is_empty() { return "<span class='c-err'>cat: missing file operand</span>".to_string(); }
                 let target = args[0];
                 let full_path = if self.cwd == "/" { format!("/{}", target) } else { format!("{}/{}", self.cwd, target) };
                 
                 match self.vfs.get(&full_path) {
                     Some(content) => content.clone(),
-                    None => format!("cat: {}: No such file", target),
+                    None => format!("<span class='c-err'>cat: {}: No such file</span>", target),
                 }
             }
-            _ => format!("bhavya-os: command not found: {}", command),
+            _ => format!("<span class='c-err'>bhavya-os: command not found: {}</span>", command),
         }
     }
 }
